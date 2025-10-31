@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from transformers import AutoTokenizer, AutoModel
 import torch
+import os
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')  # ✅ FIX: Use non-GUI backend
@@ -236,5 +237,6 @@ def predict():
 
 
 # ---------------------- MAIN ----------------------
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
