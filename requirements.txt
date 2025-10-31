@@ -1,0 +1,11 @@
+flask
+torch
+transformers
+scikit-learn
+numpy
+pandas
+matplotlib
+shap
+lime
+nltk
+gunicorn

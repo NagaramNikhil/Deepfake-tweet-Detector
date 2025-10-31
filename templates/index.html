@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hybrid Deepfake Tweet Detection</title>
+<style>
+    body {
+        background-color: #0e1117;
+        color: #f0f0f0;
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    header {
+        background: linear-gradient(90deg, #0078D7, #00b4d8);
+        padding: 20px;
+        text-align: center;
+        color: white;
+        font-size: 1.4em;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    }
+
+    main {
+        max-width: 900px;
+        margin: 40px auto;
+        background-color: #161b22;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 25px rgba(0,0,0,0.6);
+    }
+
+    textarea {
+        width: 100%;
+        height: 120px;
+        background-color: #1e232b;
+        color: #f0f0f0;
+        border: 1px solid #444;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 1em;
+        resize: none;
+    }
+
+    button {
+        background: linear-gradient(90deg, #0078D7, #00b4d8);
+        color: white;
+        padding: 12px 25px;
+        font-size: 1em;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 15px;
+        transition: all 0.3s ease;
+    }
+
+    button:hover {
+        transform: scale(1.05);
+        background: linear-gradient(90deg, #00b4d8, #0078D7);
+        box-shadow: 0 0 15px #00b4d8;
+    }
+
+    .section {
+        background-color: #1e232b;
+        border: 1px solid #2c313a;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    .section h3 {
+        border-bottom: 1px solid #333;
+        padding-bottom: 5px;
+        color: #00b4d8;
+    }
+
+    img {
+        display: block;
+        margin: 15px auto;
+        border-radius: 10px;
+        max-width: 95%;
+        height: auto;
+        background-color: #f9fafc;
+        padding: 8px;
+        box-shadow: 0 0 10px rgba(255,255,255,0.2);
+        transition: transform 0.3s ease;
+    }
+    img:hover {
+        transform: scale(1.02);
+    }
+
+    pre {
+        background-color: #0d1117;
+        color: #c9d1d9;
+        padding: 10px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 0.95em;
+    }
+
+    #status {
+        color: #ffd166;
+        margin-top: 10px;
+        font-style: italic;
+    }
+
+    footer {
+        text-align: center;
+        color: #aaa;
+        margin-top: 40px;
+        font-size: 0.9em;
+        padding-bottom: 20px;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.8s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); opacity: 1; }
+    }
+</style>
+</head>
+<body>
+<header>
+     Hybrid Deepfake Tweet Detection System (Stylometry + Transformer Embedding + Explainable AI)
+</header>
+
+<main>
+    <h2> Analyze Tweet</h2>
+    <textarea id="tweet" placeholder="Type or paste your tweet here..."></textarea>
+    <button onclick="analyze()">Analyze</button>
+    <div id="status"></div>
+
+    <div id="output" style="display:none" class="fade-in">
+        <div class="section">
+            <h3> Prediction</h3>
+            <div id="prediction"></div>
+            <div id="confidence"></div>
+        </div>
+
+        <div class="section">
+            <h3> Stylometric Analysis</h3>
+            <pre id="stylometry"></pre>
+        </div>
+
+        <div class="section">
+            <h3> SHAP Explanation</h3>
+            <div id="shap_container">
+                <img id="shap_img" src="" alt="SHAP Plot" style="display:none;">
+            </div>
+            <pre id="shap_vals"></pre>
+        </div>
+
+        <div class="section">
+            <h3> LIME Explanation</h3>
+            <div id="lime_container">
+                <img id="lime_img" src="" alt="LIME Plot" style="display:none;">
+            </div>
+            <pre id="lime_vals"></pre>
+        </div>
+    </div>
+</main>
+
+<footer>
+    © 2025 Hybrid Deepfake Detector | Designed by <b>Nikhil Kumar</b>
+</footer>
+
+<script>
+async function analyze(){
+    document.getElementById("status").innerText = "⏳ Analyzing... Please wait (model loading may take 15–30s).";
+    document.getElementById("output").style.display="none";
+    const tweet = document.getElementById("tweet").value.trim();
+    if(!tweet){
+        document.getElementById("status").innerText = "⚠️ Please enter a tweet before analyzing.";
+        return;
+    }
+
+    const res = await fetch("/predict", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({tweet})
+    });
+
+    const data = await res.json();
+    if(data.error){
+        document.getElementById("status").innerText = data.error;
+        return;
+    }
+
+    document.getElementById("status").innerText = "";
+    document.getElementById("output").style.display="block";
+
+    document.getElementById("prediction").innerHTML = "<b>Input:</b> "+data.input_tweet+"<br><b>Predicted:</b> "+data.prediction;
+    document.getElementById("confidence").innerHTML = "<b>Confidence:</b> "+data.confidence+"%";
+    document.getElementById("stylometry").innerText = JSON.stringify(data.stylometry, null, 2);
+
+    // SHAP
+    if(data.shap_plot){
+        document.getElementById("shap_img").src = "data:image/png;base64,"+data.shap_plot;
+        document.getElementById("shap_img").style.display="block";
+        document.getElementById("shap_vals").innerText = (data.shap_values && data.shap_values.length>0)
+            ? data.shap_values.map(it=>`• Feature ${it.feature}: ${it.shap}`).join("\n")
+            : "Top SHAP features not available.";
+    } else {
+        document.getElementById("shap_img").style.display="none";
+        document.getElementById("shap_vals").innerText = "SHAP not available.";
+    }
+
+    // LIME
+    if(data.lime_plot){
+        document.getElementById("lime_img").src = "data:image/png;base64,"+data.lime_plot;
+        document.getElementById("lime_img").style.display="block";
+        document.getElementById("lime_vals").innerText = (data.lime_explanation && data.lime_explanation.length>0)
+            ? data.lime_explanation.map(it=>`• ${it[0]} : ${it[1]}`).join("\n")
+            : "LIME explanation not available.";
+    } else {
+        document.getElementById("lime_img").style.display="none";
+        document.getElementById("lime_vals").innerText = "LIME not available.";
+    }
+}
+</script>
+</body>
+</html>
